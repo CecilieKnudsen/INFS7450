@@ -57,7 +57,6 @@ def between_centrality(graph, num):
     return sorted_results
 
 
-
 def sort_dict(results, num):
     "helping method to sort list"
     sorted_bc = dict(reversed(sorted(results.items(), key=lambda c: c[1])))
@@ -75,11 +74,48 @@ def write_to_file(results, value="w"):
     print("Results written to file! :) good job!")
 
 
-def pagerank_centrality(graph):
+def pagerank_centrality(graph, aplha, beta):
+    a = adjacency_matrix(graph)
+    d = inverse_degree_matrix(graph, a)
+
+    count = 0
+
+
+def adjacency_matrix(graph):
     """
-  Here is your main function
-  """
-    pass
+    Function for creating the adjacency matrix.
+    :param graph: from the dataset
+    :return: Adjacency matrix
+    """
+    # n is the dimension of the matrix
+
+    n = len(graph)
+    # sorted nodes
+    nodes = sorted(list(graph.nodes()))
+
+    # Initliaze the matrix with zeros, n x n matrix
+    a = {}
+    for node in graph:
+        a[node] = [0 for i in range(len(nodes))]
+        for neighbor in graph.adj[node]:
+            a[node][neighbor] = 1
+    print(a)
+    return a
+
+
+def inverse_degree_matrix(graph, adjacency_matrix):
+    """
+    Function for creating the degree matrix
+    :param graph: from the dataset
+    :return: Degree matrix
+    """
+    D = dict(graph.degree)
+    print(D)
+    for node in D.keys():
+        D[node] = 1 / D[node]
+    print(D)
+
+    return D
 
 
 def breadth_first_search(graph, root):
@@ -139,7 +175,17 @@ def main():
 
 
 if __name__ == "__main__":
-    G = construct_graph('data.txt')
+    #G = construct_graph('data.txt')
+    G = nx.Graph()
+    G.add_nodes_from([0, 1, 2, 3, 4])
+
+    G.add_edge(0, 1)
+    G.add_edge(0, 3)
+    G.add_edge(0, 4)
+    G.add_edge(1, 2)
+    G.add_edge(1, 4)
+    G.add_edge(2, 3)
+    G.add_edge(2, 4)
     # print(G)
     graph = {
         '5': ['3', '7'],
@@ -150,4 +196,5 @@ if __name__ == "__main__":
         '8': []
     }
 
-    between_centrality(G, 10)
+    # between_centrality(G, 10)
+    pagerank_centrality(G, 0.5, 0.5)

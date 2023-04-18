@@ -7,9 +7,11 @@ import numpy as np
 
 def construct_graph(graph_data):
     """
-  Code for constructing the graph
-  Used the dataset provided
-  """
+    Function for constructing the graph
+    Used the dataset provided
+    :param graph_data: txt file
+    :return: The graph
+    """
     graph_data = open("data.txt", 'r')
     G = nx.Graph()
     for line in graph_data.readlines():
@@ -20,12 +22,15 @@ def construct_graph(graph_data):
 
 def between_centrality(graph, num):
     """
-  Here is your code for calculating the node between centralities
+  Function for calculating the node between centralities
   The betweennes centrality for node x
   is the probability that a shortest path passes through x
   1) Go through all the nodes
   2) Implement BFS, forward step
   3) Perform the backward step
+  :param: graph: from the dataset
+   :param: num: number of nodes wanted
+  :return: Top 10 nodes
 
   """
     nodes = graph
@@ -58,12 +63,23 @@ def between_centrality(graph, num):
 
 
 def sort_dict(results, num):
-    "helping method to sort list"
+    """
+    Function to sort the top results
+    :param results: needs sorting
+    :param num: top values
+    :return: The extrracted top values
+    """
     sorted_bc = dict(reversed(sorted(results.items(), key=lambda c: c[1])))
     return list(sorted_bc.keys())[:num]
 
 
 def write_to_file(results, value="w"):
+    """
+    Function to write to file
+    :param results: written to file
+    :param value: write or append
+    :return: none
+    """
     f = open("47888249.txt", value)
     if value == "a":
         # Appending the file
@@ -74,11 +90,81 @@ def write_to_file(results, value="w"):
     print("Results written to file! :) good job!")
 
 
-def pagerank_centrality(graph, aplha, beta):
+
+def pagerank_centrality(graph, alpha, beta, eps=1e-6):
+    """
+    Function for computing the pagerank values
+    :param graph: from the dataset
+    :param alpha: given in the task
+    :param beta: given in the task
+    :param eps: epsilon value
+    :return: Top 10 nodes
+    """
     a = adjacency_matrix(graph)
-    d = inverse_degree_matrix(graph, a)
+    d = inverse_degree_matrix(graph)
+
 
     count = 0
+    n = len(a)
+    # The start vector, all PageRank values are 1 initally
+    # This is the "C" in the power iteration formula
+    # PR = dict.fromkeys(a, 1.0)
+    print(n)
+    PR = dict.fromkeys(a, 1.0/n)
+
+    # Printing out for checking
+    print("This is the start PageRrank: " + str(PR))
+    print("This is the start A: " + str(a))
+    print("This is the start D: " + str(d))
+
+    # Power iteration method is used for computing PageRank
+    # Error value first set to 1 just for initialisation
+
+    err = 1
+    while err > n * eps: # Condition where we need to break
+
+        # A print to check the first values
+        if count < 10:
+            count = count + 1
+            print("Iteration {}: the value of the pagerank: {}".format(count, PR))
+        # Exceeding the number of iterations that is sufficient
+        # We then break the while loop
+        if count == 100:
+            break
+
+        # Setting the PR to the PR it was previously
+        prev_PR = PR
+        PR = dict.fromkeys(prev_PR, 0)
+
+        # Going through each element in the PageRank vector
+        # In order to complete the matrix multiplication
+        for element in PR:
+
+            # Going through each row in the adjacency matrix
+            for value in a[element]:
+
+                # Multiplication with the inverse degree matrix as well
+                # Setting the new PR value
+                # The inverse degree multiplication only have values along the diagonal
+                PR[value] += (alpha*d[element]*prev_PR[element])
+            # Beta is added to the final value
+            PR[element] += beta
+
+        # New error value is computed
+        # This needs to be checked in order to know if we need to break
+        err = (np.linalg.norm([PR[n] - prev_PR[n] for n in PR]))
+
+
+        if err < n * eps:
+            # Sorting the top 10 values
+            Old_PR = PR
+            PR = sort_dict(PR, 10)
+            print("This is the top 10: " + str(PR))
+            write_to_file(PR, "a")
+            return PR
+
+    print("No convergence happened in the 100 iterations")
+    return PR
 
 
 def adjacency_matrix(graph):
@@ -87,28 +173,18 @@ def adjacency_matrix(graph):
     :param graph: from the dataset
     :return: Adjacency matrix
     """
-    # n is the dimension of the matrix
-
-    n = len(graph)
-    # sorted nodes
-    nodes = sorted(list(graph.nodes()))
-
-    # Initliaze the matrix with zeros, n x n matrix
-    a = {}
-    for node in graph:
-        a[node] = [0 for i in range(len(nodes))]
-        for neighbor in graph.adj[node]:
-            a[node][neighbor] = 1
+    a = nx.to_dict_of_dicts(graph)
     print(a)
     return a
 
 
-def inverse_degree_matrix(graph, adjacency_matrix):
+def inverse_degree_matrix(graph):
     """
     Function for creating the degree matrix
     :param graph: from the dataset
     :return: Degree matrix
     """
+
     D = dict(graph.degree)
     print(D)
     for node in D.keys():
@@ -170,12 +246,8 @@ def breadth_first_search(graph, root):
     return predecessors, sigma, visited
 
 
-def main():
-    pass
+"""
 
-
-if __name__ == "__main__":
-    #G = construct_graph('data.txt')
     G = nx.Graph()
     G.add_nodes_from([0, 1, 2, 3, 4])
 
@@ -186,15 +258,10 @@ if __name__ == "__main__":
     G.add_edge(1, 4)
     G.add_edge(2, 3)
     G.add_edge(2, 4)
-    # print(G)
-    graph = {
-        '5': ['3', '7'],
-        '3': ['2', '4'],
-        '7': ['8'],
-        '2': [],
-        '4': ['8'],
-        '8': []
-    }
 
-    # between_centrality(G, 10)
-    pagerank_centrality(G, 0.5, 0.5)
+"""
+
+if __name__ == "__main__":
+    G = construct_graph('data.txt')
+    between_centrality(G, 10)
+    pagerank_centrality(G, 0.85, 0.15)

@@ -12,7 +12,7 @@ def construct_graph(graph_data):
     :param graph_data: txt file
     :return: The graph
     """
-    graph_data = open("data.txt", 'r')
+    graph_data = open(graph_data, 'r')
     G = nx.Graph()
     for line in graph_data.readlines():
         line = line.strip().split(" ")

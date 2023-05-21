@@ -1,6 +1,6 @@
 """
 Project 2 Social Media Analytics
-Cecilie Knudsen 4788249
+Cecilie Knudsen 47888249
 Link Prediction
 """
 import networkx as nx
@@ -72,7 +72,7 @@ def reverse_pair(pair):
     :param pair: pair we want to reverse
     :return: the reversed pair
     """
-    list_pair = pair.split(" & ")
+    list_pair = pair[0].split(" & ")
     return list_pair[1] + " & " + list_pair[0]
 
 
@@ -146,9 +146,8 @@ def calculate_score(results, positive, measure_method):
     score = 0
     positive_pairs = dict.fromkeys(pair[0] + " & " + str(pair[1]) for pair in positive.edges())
     for pair in results:
-
         reverse_the_pair = reverse_pair(pair)
-        if pair in positive_pairs or reverse_the_pair in positive_pairs:
+        if pair[0] in positive_pairs or reverse_the_pair in positive_pairs:
             score += 1
     accuracy_score = (score / len(positive_pairs)) * 100
     print("This is the accuracy score for %s: %f" %(measure_method,  accuracy_score ) + "%")
@@ -162,9 +161,29 @@ def sort_dict(results, num):
     :param num: top values
     :return: The extracted top values in a list
     """
-    sorted_bc = dict(reversed(sorted(results.items(), key=lambda c: c[1])))
-    return list(sorted_bc)[:num]
+    return sorted(results.items(), key=lambda c: c[1], reverse=True)[:num]
 
+
+def format_fix(list):
+    results = []
+    for pair in list:
+        results.append(pair[0] + "\n")
+    return results
+def write_to_file(results,measure, value="w"):
+    """
+    Function to write to file
+    :param results: written to file
+    :param value: write or append
+    :return: none
+    """
+    f = open("results.txt", value)
+    if value == "a":
+        # Appending the file
+        f.write("\n")
+    for node in results:
+        f.write(str(node) + " ")
+    f.close()
+    print("The results is written to file with measurement %s, good job! " % (measure))
 
 def main():
     G_training = construct_graph("training.txt")
@@ -185,6 +204,7 @@ def main():
     # Computing the Jaccard simialirty using networkx
     jaccard_nx = jaccard_with_library(G_training, validation_pairs)
     top_100_jaccard_nx = sort_dict(jaccard_nx, 100)
+
     jaccard_score_nx = calculate_score(top_100_jaccard_nx, G_positive, "Jaccard Similarity Networkx")
 
 
@@ -210,6 +230,16 @@ def main():
     common_neigbor_centrality = compute_resource_allocation_index(G_training, validation_pairs)
     top_100_cmc = sort_dict(common_neigbor_centrality, 100)
     cmc_score = calculate_score(top_100_cmc, G_positive, "Common Neighbor Centrality")
+
+    # TEST Set, from the results, Resource Allocation and Common Neighbor Centrality gave the best score
+
+    resource_allocation_index_test = compute_resource_allocation_index(G_training, test_data)
+    top_100_test = sort_dict(resource_allocation_index_test, 100)
+    final_results = format_fix(top_100_test)
+    write_to_file(final_results, "Resource Allocation Index")
+
+
+
 
 
 

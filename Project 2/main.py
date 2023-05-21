@@ -86,7 +86,6 @@ def compute_jaccard(node_pairs, neighbors):
     """
 
     score_dict = dict()
-    print(neighbors)
     for pair in node_pairs:
         author1 = pair[0]
         author2 = pair[1]
@@ -104,31 +103,56 @@ def compute_jaccard(node_pairs, neighbors):
 
 
 def jaccard_with_library(G, node_pairs):
-    print(node_pairs)
     score_dict = dict()
     jaccard = nx.jaccard_coefficient(G, node_pairs)
-    print(jaccard)
     for u, v, p in jaccard:
         score_dict[u + " & " + v] = p
-    print("This is the jaccard from networkx: " + str(score_dict))
     return score_dict
 
 
 def compute_adamic_adar(G, edges):
     score_dict = dict()
+    adamic_adar = nx.adamic_adar_index(G, edges)
+    for u, v, p in adamic_adar:
+        score_dict[u + " & " + v] = p
+    return score_dict
 
 
-def calculate_score(results, positive):
+def compute_preferential_attachement(G, edges):
+    score_dict = dict()
+    preferential_attachement = nx.preferential_attachment(G, edges)
+    for u, v, p in preferential_attachement:
+        score_dict[u + " & " + v] = p
+    return score_dict
+
+
+def compute_resource_allocation_index(G, edges):
+    score_dict = dict()
+    resource_allocation_index = nx.resource_allocation_index(G, edges)
+    for u, v, p in resource_allocation_index:
+        score_dict[u + " & " + v] = p
+    return score_dict
+
+
+def compute_common_neighbor_centrality(G, edges, alpha=0.8):
+    score_dict = dict()
+    common_neighbor_centrality = nx.common_neighbor_centrality(G, edges, alpha)
+    for u, v, p in common_neighbor_centrality:
+        score_dict[u + " & " + v] = p
+    return score_dict
+
+
+def calculate_score(results, positive, measure_method):
     score = 0
     positive_pairs = dict.fromkeys(pair[0] + " & " + str(pair[1]) for pair in positive.edges())
     for pair in results:
-        print("this is the pair: " + str(results))
+
         reverse_the_pair = reverse_pair(pair)
         if pair in positive_pairs or reverse_the_pair in positive_pairs:
             score += 1
     accuracy_score = (score / len(positive_pairs)) * 100
-    print(score)
-    print("This is the accuracy score: " + str(accuracy_score))
+    print("This is the accuracy score for %s: %f" %(measure_method,  accuracy_score ) + "%")
+    return accuracy_score
 
 
 def sort_dict(results, num):
@@ -136,7 +160,7 @@ def sort_dict(results, num):
     Function to sort the top results
     :param results: needs sorting
     :param num: top values
-    :return: The extrracted top values
+    :return: The extracted top values in a list
     """
     sorted_bc = dict(reversed(sorted(results.items(), key=lambda c: c[1])))
     return list(sorted_bc)[:num]
@@ -152,21 +176,41 @@ def main():
     validation_pairs, _ = validation_set_pairs(
         "val_positive.txt", "val_negative.txt")
 
-    # Computing the Jaccard similarity
+    # Computing the Jaccard Similarity
+    jaccard = compute_jaccard(validation_pairs, neighbors)
+    top_100_values = sort_dict(jaccard, 100)
+    jaccard_score = calculate_score(top_100_values, G_positive, "Jaccard Similarity")
 
-    jaccard_score = compute_jaccard(validation_pairs, neighbors)
-    top_100_values = sort_dict(jaccard_score, 100)
-    print("The top 100 pairs: " + str(top_100_values))
-    calculate_score(top_100_values, G_positive)
 
-    jaccard_networkx = jaccard_with_library(G_training, validation_pairs)
-    top = sort_dict(jaccard_networkx, 100)
-    score = calculate_score(top, G_positive)
-    print("This is the score from networkx" + str(score))
+    # Computing the Jaccard simialirty using networkx
+    jaccard_nx = jaccard_with_library(G_training, validation_pairs)
+    top_100_jaccard_nx = sort_dict(jaccard_nx, 100)
+    jaccard_score_nx = calculate_score(top_100_jaccard_nx, G_positive, "Jaccard Similarity Networkx")
 
-    """
-    jaccard_on_test = compute_jaccard(test_data, neighbors)
-    top_100_test = sort_dict(jaccard_on_test, 100)"""
+
+    # Computing Adamic Adar
+    adamic_adar = compute_adamic_adar(G_training, validation_pairs)
+    top_100_adamic = sort_dict(adamic_adar, 100)
+    adamic_score = calculate_score(top_100_adamic, G_positive, "Adamic Adar")
+
+
+    # Computing Preferential Attachement
+    preferential_attachement = compute_preferential_attachement(G_training, validation_pairs)
+    top_100_pa = sort_dict(preferential_attachement, 100)
+    pa_score = calculate_score(top_100_pa, G_positive, "Preferential Attachement")
+
+
+    # Computing Resource Allocation Index
+    resource_allocation_index = compute_resource_allocation_index(G_training, validation_pairs)
+    top_100_rai = sort_dict(resource_allocation_index, 100)
+    rai_score = calculate_score(top_100_rai, G_positive, "Resource Allocation Index")
+
+
+    # Computing Common Neighbor Centrality
+    common_neigbor_centrality = compute_resource_allocation_index(G_training, validation_pairs)
+    top_100_cmc = sort_dict(common_neigbor_centrality, 100)
+    cmc_score = calculate_score(top_100_cmc, G_positive, "Common Neighbor Centrality")
+
 
 
 if __name__ == '__main__':

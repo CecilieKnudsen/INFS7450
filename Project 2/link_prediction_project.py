@@ -167,8 +167,10 @@ def sort_dict(results, num):
 def format_fix(list):
     results = []
     for pair in list:
-        results.append(pair[0] + "\n")
+        results.append(pair[0].replace(" &", "")+ "\n")
     return results
+
+
 def write_to_file(results,measure, value="w"):
     """
     Function to write to file
@@ -177,13 +179,11 @@ def write_to_file(results,measure, value="w"):
     :return: none
     """
     f = open("results.txt", value)
-    if value == "a":
-        # Appending the file
-        f.write("\n")
-    for node in results:
-        f.write(str(node) + " ")
+    f.writelines(results)
     f.close()
     print("The results is written to file with measurement %s, good job! " % (measure))
+
+
 
 def main():
     G_training = construct_graph("training.txt")
@@ -236,6 +236,7 @@ def main():
     resource_allocation_index_test = compute_resource_allocation_index(G_training, test_data)
     top_100_test = sort_dict(resource_allocation_index_test, 100)
     final_results = format_fix(top_100_test)
+    print(final_results)
     write_to_file(final_results, "Resource Allocation Index")
 
 
